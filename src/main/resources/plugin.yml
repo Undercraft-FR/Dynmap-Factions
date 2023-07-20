@@ -1,4 +1,4 @@
-name: Dynmap-Factions
+name: UnderDynmap-Factions
 main: org.dynmap.factions.DynmapFactionsPlugin
 version: "${project.version}-${BUILD_NUMBER}"
 author: mikeprimm
