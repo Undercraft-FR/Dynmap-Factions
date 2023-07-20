@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Dynmap-Factions:jar">
+    <output-path>$USER_HOME$/Downloads</output-path>
+    <root id="archive" name="Dynmap-Factions.jar">
+      <element id="module-output" name="Dynmap-Factions" />
+    </root>
+  </artifact>
+</component>

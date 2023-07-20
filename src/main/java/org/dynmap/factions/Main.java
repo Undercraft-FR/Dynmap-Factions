@@ -46,7 +46,7 @@ import com.massivecraft.factions.event.EventFactionsMembershipChange;
 import com.massivecraft.factions.event.EventFactionsNameChange;
 import com.massivecraft.massivecore.ps.PS;
 
-public class DynmapFactionsPlugin extends JavaPlugin {
+public class Main extends JavaPlugin {
     private static Logger log;
     private static final String DEF_INFOWINDOW = "<div class=\"infowindow\"><span style=\"font-size:120%;\">%regionname%</span><br />Flags<br /><span style=\"font-weight:bold;\">%flags%</span></div>";
     Plugin dynmap;
@@ -55,9 +55,9 @@ public class DynmapFactionsPlugin extends JavaPlugin {
     Plugin factions;
     Factions factapi;
     boolean playersets;
-    
+
     int blocksize;
-    
+
     FileConfiguration cfg;
     MarkerSet set;
     long updperiod;
@@ -68,12 +68,12 @@ public class DynmapFactionsPlugin extends JavaPlugin {
     Set<String> visible;
     Set<String> hidden;
     boolean stop;
-    
+
     @Override
     public void onLoad() {
         log = this.getLogger();
     }
-    
+
     private class AreaStyle {
         String strokecolor;
         double strokeopacity;
@@ -118,7 +118,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
             boost = cfg.getBoolean(path+".boost", false);
         }
     }
-    
+
     public static void info(String msg) {
         log.log(Level.INFO, msg);
     }
@@ -132,7 +132,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
             if(!stop) {
                 updateFactions();
                 if(!runonce) {
-                    getServer().getScheduler().scheduleSyncDelayedTask(DynmapFactionsPlugin.this, this, updperiod);
+                    getServer().getScheduler().scheduleSyncDelayedTask(Main.this, this, updperiod);
                 }
                 else if(pending == this) {
                     pending = null;
@@ -151,14 +151,14 @@ public class DynmapFactionsPlugin extends JavaPlugin {
                 updatePlayerSet(faction);
         }
     }
-    
+
     private void requestUpdatePlayerSet(String factid) {
         if(playersets)
             getServer().getScheduler().scheduleSyncDelayedTask(this, new PlayerSetUpdate(factid));
     }
 
     private FactionsUpdate pending = null;
-    
+
     private void requestUpdateFactions() {
         if(pending == null) {
             FactionsUpdate upd = new FactionsUpdate();
@@ -197,10 +197,10 @@ public class DynmapFactionsPlugin extends JavaPlugin {
             set.deleteSet();
         }
     }
-    
+
     private Map<String, AreaMarker> resareas = new HashMap<String, AreaMarker>();
     private Map<String, Marker> resmark = new HashMap<String, Marker>();
-    
+
     private String formatInfoWindow(Faction fact) {
         String v = "<div class=\"regioninfo\">"+infowindow+"</div>";
         v = v.replace("%regionname%", ChatColor.stripColor(fact.getName()));
@@ -209,11 +209,11 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         v = v.replace("%playerowners%", (adm!=null)?adm.getName():"");
         String res = "";
         for(MPlayer r : fact.getMPlayers()) {
-        	if(res.length()>0) res += ", ";
-        	res += r.getName();
+            if(res.length()>0) res += ", ";
+            res += r.getName();
         }
         v = v.replace("%playermembers%", res);
-        
+
         v = v.replace("%nation%", ChatColor.stripColor(fact.getName()));
         /* Build flags */
         String flgs = "";
@@ -224,7 +224,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         v = v.replace("%flags%", flgs);
         return v;
     }
-    
+
     private boolean isVisible(String id, String worldname) {
         if((visible != null) && (visible.size() > 0)) {
             if((visible.contains(id) == false) && (visible.contains("world:" + worldname) == false)) {
@@ -237,7 +237,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         }
         return true;
     }
-        
+
     private void addStyle(String resid, AreaMarker m) {
         AreaStyle as = cusstyle.get(resid);
         if(as == null) {
@@ -254,7 +254,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         m.setFillStyle(as.fillopacity, fc);
         m.setBoostFlag(as.boost);
     }
-    
+
     private MarkerIcon getMarkerIcon(String factname, Faction fact) {
         AreaStyle as = cusstyle.get(factname);
         if(as == null) {
@@ -262,9 +262,9 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         }
         return as.homeicon;
     }
- 
+
     enum direction { XPLUS, ZPLUS, XMINUS, ZMINUS };
-        
+
     /**
      * Find all contiguous blocks, set in target and clear in source
      */
@@ -272,7 +272,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         int cnt = 0;
         ArrayDeque<int[]> stack = new ArrayDeque<int[]>();
         stack.push(new int[] { x, y });
-        
+
         while(stack.isEmpty() == false) {
             int[] nxt = stack.pop();
             x = nxt[0];
@@ -293,35 +293,35 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         }
         return cnt;
     }
-    
+
     private static class FactionBlock {
         int x, z;
     }
-    
+
     private static class FactionBlocks {
         Map<String, LinkedList<FactionBlock>> blocks = new HashMap<String, LinkedList<FactionBlock>>();
     }
-    
+
     /* Handle specific faction on specific world */
     private void handleFactionOnWorld(String factname, Faction fact, String world, LinkedList<FactionBlock> blocks, Map<String, AreaMarker> newmap, Map<String, Marker> newmark) {
         double[] x = null;
         double[] z = null;
         int poly_index = 0; /* Index of polygon for given faction */
-        
+
         /* Build popup */
         String desc = formatInfoWindow(fact);
-        
+
         /* Handle areas */
         if(isVisible(factname, world)) {
-        	if(blocks.isEmpty())
-        	    return;
+            if(blocks.isEmpty())
+                return;
             LinkedList<FactionBlock> nodevals = new LinkedList<FactionBlock>();
             TileFlags curblks = new TileFlags();
-        	/* Loop through blocks: set flags on blockmaps */
-        	for(FactionBlock b : blocks) {
-        	    curblks.setFlag(b.x, b.z, true); /* Set flag for block */
-        	    nodevals.addLast(b);
-        	}
+            /* Loop through blocks: set flags on blockmaps */
+            for(FactionBlock b : blocks) {
+                curblks.setFlag(b.x, b.z, true); /* Set flag for block */
+                nodevals.addLast(b);
+            }
             /* Loop through until we don't find more areas */
             while(nodevals != null) {
                 LinkedList<FactionBlock> ournodes = null;
@@ -449,10 +449,10 @@ public class DynmapFactionsPlugin extends JavaPlugin {
                         m.setLabel(factname);   /* Update label */
                     }
                     m.setDescription(desc); /* Set popup */
-                
+
                     /* Set line and fill properties */
                     addStyle(factname, m);
-    
+
                     /* Add to map */
                     newmap.put(polyid, m);
                     poly_index++;
@@ -460,80 +460,80 @@ public class DynmapFactionsPlugin extends JavaPlugin {
             }
         }
     }
-    
+
     /* Update Factions information */
     private void updateFactions() {
         Map<String,AreaMarker> newmap = new HashMap<String,AreaMarker>(); /* Build new map */
         Map<String,Marker> newmark = new HashMap<String,Marker>(); /* Build new map */
-        
+
         /* Parse into faction centric mapping, split by world */
         Map<String, FactionBlocks> blocks_by_faction = new HashMap<String, FactionBlocks>();
- 
+
         FactionColl fc = FactionColl.get();
-            Collection<Faction> facts = fc.getAll();
-            for (Faction fact : facts) {
-                Set<PS> chunks = BoardColl.get().getChunks(fact);
-                String fid = fc.getUniverse() + "_" + fact.getId();
-                FactionBlocks factblocks = blocks_by_faction.get(fid); /* Look up faction */
-                if(factblocks == null) {    /* Create faction block if first time */
-                    factblocks = new FactionBlocks();
-                    blocks_by_faction.put(fid, factblocks);
+        Collection<Faction> facts = fc.getAll();
+        for (Faction fact : facts) {
+            Set<PS> chunks = BoardColl.get().getChunks(fact);
+            String fid = fc.getUniverse() + "_" + fact.getId();
+            FactionBlocks factblocks = blocks_by_faction.get(fid); /* Look up faction */
+            if(factblocks == null) {    /* Create faction block if first time */
+                factblocks = new FactionBlocks();
+                blocks_by_faction.put(fid, factblocks);
+            }
+
+            for (PS cc : chunks) {
+                String world = cc.getWorld();
+
+                /* Get block set for given world */
+                LinkedList<FactionBlock> blocks = factblocks.blocks.get(world);
+                if(blocks == null) {
+                    blocks = new LinkedList<FactionBlock>();
+                    factblocks.blocks.put(world, blocks);
                 }
+                FactionBlock fb = new FactionBlock();
+                fb.x = cc.getChunkX();
+                fb.z = cc.getChunkZ();
+                blocks.add(fb); /* Add to list */
+            }
+        }
+        /* Loop through factions */
+        for(Faction fact : facts) {
+            String factname = ChatColor.stripColor(fact.getName());
+            String fid = fc.getUniverse() + "_" + fact.getId();
+            FactionBlocks factblocks = blocks_by_faction.get(fid); /* Look up faction */
+            if (factblocks == null) continue;
 
-                for (PS cc : chunks) {
-                    String world = cc.getWorld();
+            /* Loop through each world that faction has blocks on */
+            for(Map.Entry<String, LinkedList<FactionBlock>>  worldblocks : factblocks.blocks.entrySet()) {
+                handleFactionOnWorld(factname, fact, worldblocks.getKey(), worldblocks.getValue(), newmap, newmark);
+            }
+            factblocks.blocks.clear();
 
-                    /* Get block set for given world */
-                    LinkedList<FactionBlock> blocks = factblocks.blocks.get(world);
-                    if(blocks == null) {
-                        blocks = new LinkedList<FactionBlock>();
-                        factblocks.blocks.put(world, blocks);
+            /* Now, add marker for home location */
+            PS homeloc = fact.getHome();
+            if(homeloc != null) {
+                String markid = fc.getUniverse() + "_" + factname + "__home";
+                MarkerIcon ico = getMarkerIcon(factname, fact);
+                if(ico != null) {
+                    Marker home = resmark.remove(markid);
+                    String lbl = factname + " [home]";
+                    if(home == null) {
+                        home = set.createMarker(markid, lbl, homeloc.getWorld(),
+                                homeloc.getLocationX(), homeloc.getLocationY(), homeloc.getLocationZ(), ico, false);
                     }
-                    FactionBlock fb = new FactionBlock();
-                    fb.x = cc.getChunkX();
-                    fb.z = cc.getChunkZ();
-                    blocks.add(fb); /* Add to list */
+                    else {
+                        home.setLocation(homeloc.getWorld(), homeloc.getLocationX(), homeloc.getLocationY(), homeloc.getLocationZ());
+                        home.setLabel(lbl);   /* Update label */
+                        home.setMarkerIcon(ico);
+                    }
+                    if (home != null) {
+                        home.setDescription(formatInfoWindow(fact)); /* Set popup */
+                        newmark.put(markid, home);
+                    }
                 }
             }
-            /* Loop through factions */
-            for(Faction fact : facts) {
-                String factname = ChatColor.stripColor(fact.getName());
-                String fid = fc.getUniverse() + "_" + fact.getId();
-                FactionBlocks factblocks = blocks_by_faction.get(fid); /* Look up faction */
-                if (factblocks == null) continue;
-
-                /* Loop through each world that faction has blocks on */
-                for(Map.Entry<String, LinkedList<FactionBlock>>  worldblocks : factblocks.blocks.entrySet()) {
-                    handleFactionOnWorld(factname, fact, worldblocks.getKey(), worldblocks.getValue(), newmap, newmark);
-                }
-                factblocks.blocks.clear();
-
-                /* Now, add marker for home location */
-                PS homeloc = fact.getHome();
-                if(homeloc != null) {
-                    String markid = fc.getUniverse() + "_" + factname + "__home";
-                    MarkerIcon ico = getMarkerIcon(factname, fact);
-                    if(ico != null) {
-                        Marker home = resmark.remove(markid);
-                        String lbl = factname + " [home]";
-                        if(home == null) {
-                            home = set.createMarker(markid, lbl, homeloc.getWorld(), 
-                                    homeloc.getLocationX(), homeloc.getLocationY(), homeloc.getLocationZ(), ico, false);
-                        }
-                        else {
-                            home.setLocation(homeloc.getWorld(), homeloc.getLocationX(), homeloc.getLocationY(), homeloc.getLocationZ());
-                            home.setLabel(lbl);   /* Update label */
-                            home.setMarkerIcon(ico);
-                        }
-                        if (home != null) {
-                            home.setDescription(formatInfoWindow(fact)); /* Set popup */
-                            newmark.put(markid, home);
-                        }
-                    }
-                }
         }
         blocks_by_faction.clear();
-        
+
         /* Now, review old map - anything left is gone */
         for(AreaMarker oldm : resareas.values()) {
             oldm.deleteMarker();
@@ -544,9 +544,9 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         /* And replace with new map */
         resareas = newmap;
         resmark = newmark;
-                
+
     }
-    
+
     private void updatePlayerSets() {
         if(playersets) {
             FactionColl fc = FactionColl.get();
@@ -558,7 +558,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
             }
         }
     }
-    
+
     private class OurServerListener implements Listener {
         @EventHandler
         public void onPluginEnable(PluginEnableEvent event) {
@@ -615,7 +615,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
             requestUpdateFactions();
         }
     }
-    
+
     public void onEnable() {
         info("initializing");
         PluginManager pm = getServer().getPluginManager();
@@ -627,7 +627,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         }
         api = (DynmapAPI)dynmap; /* Get API */
         /* Get Factions */
-        Plugin p = pm.getPlugin("Factions");
+        Plugin p = pm.getPlugin("UnderPays-Factions");
         if(p == null) {
             severe("Cannot find Factions!");
             return;
@@ -637,16 +637,16 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         /* If both enabled, activate */
         if(dynmap.isEnabled() && factions.isEnabled())
             activate();
-        
+
         try {
             MetricsLite ml = new MetricsLite(this);
             ml.start();
         } catch (IOException iox) {
         }
     }
-    
+
     private boolean reload = false;
-    
+
     private void activate() {
         markerapi = api.getMarkerAPI();
         if(markerapi == null) {
@@ -655,9 +655,9 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         }
         /* Connect to factions API */
         factapi = Factions.get();
-        
+
         blocksize = 16; /* Fixed at 16 */
-        
+
         /* Load configuration */
         if(reload) {
             this.reloadConfig();
@@ -672,7 +672,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         FileConfiguration cfg = getConfig();
         cfg.options().copyDefaults(true);   /* Load defaults, if needed */
         this.saveConfig();  /* Save updates, if needed */
-        
+
         /* Now, add marker set for mobs (make it transient) */
         set = markerapi.getMarkerSet("factions.markerset");
         if(set == null)
@@ -701,7 +701,7 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         ConfigurationSection sect = cfg.getConfigurationSection("custstyle");
         if(sect != null) {
             Set<String> ids = sect.getKeys(false);
-            
+
             for(String id : ids) {
                 cusstyle.put(id, new AreaStyle(cfg, "custstyle." + id, defstyle));
             }
@@ -734,10 +734,10 @@ public class DynmapFactionsPlugin extends JavaPlugin {
         if(per < 15) per = 15;
         updperiod = (per*20);
         stop = false;
-        
+
         getServer().getScheduler().scheduleSyncDelayedTask(this, new FactionsUpdate(), 40);   /* First time is 2 seconds */
-        getServer().getPluginManager().registerEvents(new OurServerListener(), this);        
-        
+        getServer().getPluginManager().registerEvents(new OurServerListener(), this);
+
         info("version " + this.getDescription().getVersion() + " is activated");
     }
 

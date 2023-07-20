@@ -1,6 +1,6 @@
 name: UnderDynmap-Factions
-main: org.dynmap.factions.DynmapFactionsPlugin
-version: "${project.version}-${BUILD_NUMBER}"
+main: org.dynmap.factions.Main
+version: 1.0.0
 author: mikeprimm
-depend: [ dynmap, Factions ]
+depend: [ dynmap, UnderPays-Factions ]
 
